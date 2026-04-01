@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx bmad-method:*)",
+      "Read(//c/Users/PC/.claude/**)",
+      "Bash(python3:*)",
+      "Bash(sed 's/.*\\\\.//')",
+      "Bash(grep -E \"\\(\\\\.md|\\\\.yaml|\\\\.json\\)$\")",
+      "Read(//tmp/**)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(./node_modules/.bin/tailwindcss init:*)",
+      "Bash(node \"C:/Users/PC/Desktop/Dossier_Perso/Github/The_Ritual/node_modules/tailwindcss/lib/cli.js\" init -p)",
+      "Bash(node:*)",
+      "Bash(node_modules/.bin/tailwindcss init:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(npx --prefix server tsc --project server/tsconfig.json --noEmit)",
+      "Bash(tsc --project server/tsconfig.json --noEmit)",
+      "Bash(npx --prefix client tsc --project client/tsconfig.app.json --noEmit)",
+      "Bash(ls \"C:/Users/PC/Desktop/Dossier_Perso/Github/The_Ritual/client/.env\"*)",
+      "Bash(ls \"C:/Users/PC/Desktop/Dossier_Perso/Github/The_Ritual/server/.env\"*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3001/health)",
+      "Bash(ipconfig)"
+    ]
+  }
+}
