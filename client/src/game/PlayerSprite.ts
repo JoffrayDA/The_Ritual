@@ -1,8 +1,27 @@
 import * as PIXI from 'pixi.js'
 import type { IPlayer } from '../types/game.types'
 
-// Couleurs uniques par index de joueur
-const PLAYER_COLORS = [0x6C63FF, 0xFF6B6B, 0x4ECDC4, 0xFFE66D, 0xFF9F43, 0xA29BFE, 0xFD79A8, 0x00B894]
+const PLAYER_COLORS = [
+  0x6C63FF, // violet
+  0xFF6B6B, // rouge-corail
+  0x00CEC9, // teal
+  0xFDCB6E, // or
+  0xFF9F43, // orange
+  0xA29BFE, // lavande
+  0xFD79A8, // rose
+  0x55EFC4, // menthe
+]
+
+const PLAYER_RIM = [
+  0x3A2FCC,
+  0xCC2222,
+  0x007A77,
+  0xCC9900,
+  0xCC6600,
+  0x6655CC,
+  0xCC3377,
+  0x00AA77,
+]
 
 export class PlayerSprite {
   private app: PIXI.Application
@@ -16,48 +35,75 @@ export class PlayerSprite {
   constructor(app: PIXI.Application, player: IPlayer, parentContainer: PIXI.Container) {
     this.app = app
     this.player = player
-
-    // Déterminer l'index de couleur basé sur l'id du joueur (stable)
     this.colorIndex = 0
 
     this.container = new PIXI.Container()
     parentContainer.addChild(this.container)
 
-    // Cercle coloré
     this.circle = new PIXI.Graphics()
     this.container.addChild(this.circle)
 
-    // Emoji avatar
-    this.avatarText = new PIXI.Text(player.avatar || '?', { fontSize: 14 })
+    this.avatarText = new PIXI.Text(player.avatar || '?', { fontSize: 13 })
     this.avatarText.anchor.set(0.5)
+    this.avatarText.position.set(0, 0.5)
     this.container.addChild(this.avatarText)
 
-    // Nom au dessus
     this.nameText = new PIXI.Text(player.name, {
       fontSize: 9,
-      fill: 0xffffff,
+      fill: 0xFFFFFF,
+      fontWeight: 'bold',
       stroke: 0x000000,
-      strokeThickness: 2,
+      strokeThickness: 3,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowDistance: 1,
     })
     this.nameText.anchor.set(0.5)
-    this.nameText.position.set(0, -22)
+    this.nameText.position.set(0, -26)
     this.container.addChild(this.nameText)
 
-    this.drawCircle()
+    this._draw()
   }
 
-  private drawCircle(): void {
+  private _draw(): void {
     const color = PLAYER_COLORS[this.colorIndex % PLAYER_COLORS.length]
+    const rim   = PLAYER_RIM[this.colorIndex % PLAYER_RIM.length]
+    const R = 15
+
     this.circle.clear()
-    this.circle.lineStyle(2, 0xffffff, 0.8)
-    this.circle.beginFill(color, 0.9)
-    this.circle.drawCircle(0, 0, 14)
+
+    // Halo
+    this.circle.beginFill(color, 0.15); this.circle.drawCircle(0, 0, R + 6); this.circle.endFill()
+    this.circle.beginFill(color, 0.25); this.circle.drawCircle(0, 0, R + 3); this.circle.endFill()
+
+    // Ombre
+    this.circle.beginFill(0x000000, 0.55)
+    this.circle.drawCircle(1, 2, R)
+    this.circle.endFill()
+
+    // Bordure
+    this.circle.beginFill(rim)
+    this.circle.drawCircle(0, 0, R + 1.5)
+    this.circle.endFill()
+
+    // Fill
+    this.circle.beginFill(color)
+    this.circle.drawCircle(0, 0, R)
+    this.circle.endFill()
+
+    // Reflet orbe
+    this.circle.beginFill(0xFFFFFF, 0.20)
+    this.circle.drawEllipse(0, -R * 0.18, R * 0.70, R * 0.45)
+    this.circle.endFill()
+
+    this.circle.beginFill(0xFFFFFF, 0.65)
+    this.circle.drawEllipse(-R * 0.28, -R * 0.32, R * 0.26, R * 0.16)
     this.circle.endFill()
   }
 
   setColorIndex(index: number): void {
     this.colorIndex = index
-    this.drawCircle()
+    this._draw()
   }
 
   setPosition(x: number, y: number): void {
@@ -67,23 +113,19 @@ export class PlayerSprite {
   updatePlayer(player: IPlayer): void {
     this.player = player
     this.avatarText.text = player.avatar || '?'
-    // Opacité réduite si déconnecté
-    this.container.alpha = player.isConnected ? 1 : 0.4
+    this.container.alpha = player.isConnected ? 1 : 0.35
   }
 
   moveTo(targetX: number, targetY: number): Promise<void> {
     return new Promise(resolve => {
       const startX = this.container.x
       const startY = this.container.y
-      const DURATION = 300 // ms par case (simplifié : on anime directement vers la destination)
+      const DURATION = 320
 
       let elapsed = 0
-
       const ticker = (delta: number) => {
-        elapsed += (delta / 60) * 1000 // delta en frames, convertir en ms
-
-        const t = Math.min(elapsed / DURATION, 1)
-        // Easing ease-out
+        elapsed += (delta / 60) * 1000
+        const t    = Math.min(elapsed / DURATION, 1)
         const ease = 1 - Math.pow(1 - t, 3)
 
         this.container.x = startX + (targetX - startX) * ease
@@ -95,7 +137,6 @@ export class PlayerSprite {
           resolve()
         }
       }
-
       this.app.ticker.add(ticker)
     })
   }
