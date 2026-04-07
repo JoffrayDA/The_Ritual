@@ -20,3 +20,71 @@ html, body, #root {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
+
+/* ── Animations mini-jeux ── */
+@keyframes countdown-pulse {
+  0%   { transform: scale(1);    opacity: 1; }
+  40%  { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(0.8);  opacity: 0; }
+}
+
+@keyframes float-up {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes tap-ripple {
+  0%   { transform: scale(0);   opacity: 0.6; }
+  100% { transform: scale(3);   opacity: 0; }
+}
+
+@keyframes ready-pulse {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.05); }
+}
+
+@keyframes flash-in {
+  0%   { transform: scale(0.85); }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.3); }
+  50%       { box-shadow: 0 0 40px rgba(255,215,0,0.7); }
+}
+
+.countdown-number {
+  animation: countdown-pulse 0.9s ease-in-out forwards;
+}
+
+.flash-in {
+  animation: flash-in 0.25s ease-out;
+}
+
+.ready-pulse {
+  animation: ready-pulse 1.5s ease-in-out infinite;
+}
+
+.glow-pulse {
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #FFD700 0%, #fff 40%, #FFD700 60%, #fff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 2s linear infinite;
+}

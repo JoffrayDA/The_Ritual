@@ -29,12 +29,10 @@ export class PlayerSprite {
   private circle: PIXI.Graphics
   private avatarText: PIXI.Text
   private nameText: PIXI.Text
-  private player: IPlayer
   private colorIndex: number
 
   constructor(app: PIXI.Application, player: IPlayer, parentContainer: PIXI.Container) {
     this.app = app
-    this.player = player
     this.colorIndex = 0
 
     this.container = new PIXI.Container()
@@ -111,7 +109,6 @@ export class PlayerSprite {
   }
 
   updatePlayer(player: IPlayer): void {
-    this.player = player
     this.avatarText.text = player.avatar || '?'
     this.container.alpha = player.isConnected ? 1 : 0.35
   }

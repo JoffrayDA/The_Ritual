@@ -255,22 +255,40 @@ export default function PeintureBattle({ players, myPlayerId, duration, onComple
     joystickRef.current = { x: 0, y: 0, active: false }
   }
 
+  const myColor = PLAYER_COLORS_HEX[myIndexRef.current % PLAYER_COLORS_HEX.length]
+  const myColorCSS = `#${myColor.toString(16).padStart(6, '0')}`
+  const timerPct = timeLeft / GAME_DURATION
+
   if (!started) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-gray-950 gap-4">
-        <p className="text-white font-bold text-2xl">Peinture Battle 🎨</p>
-        <p className="text-white/60 text-sm text-center px-8">Couvre le plus de terrain avec ta couleur !</p>
-        <p className="text-yellow-400 text-5xl font-bold">{countdown}</p>
+      <div className="flex flex-col items-center justify-center h-full gap-6"
+        style={{ background: 'linear-gradient(160deg, #0a0818, #18080a, #080a18)' }}>
+        <div className="text-6xl mb-2">🎨</div>
+        <p className="text-white font-black text-3xl tracking-wide">PEINTURE BATTLE</p>
+        <div className="flex gap-3 mt-1">
+          {PLAYER_COLORS_HEX.slice(0, players.length).map((c, i) => (
+            <div key={i} className="w-6 h-6 rounded-full"
+              style={{ background: `#${c.toString(16).padStart(6, '0')}`,
+                       boxShadow: `0 0 10px #${c.toString(16).padStart(6, '0')}88` }} />
+          ))}
+        </div>
+        <p className="text-white/50 text-sm text-center px-8">Couvre le plus de terrain avec ta couleur !</p>
+        <div className="mt-2 w-20 h-20 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(255,215,0,0.15)', border: '3px solid rgba(255,215,0,0.5)' }}>
+          <span className="countdown-number text-yellow-400 text-5xl font-black">{countdown}</span>
+        </div>
       </div>
     )
   }
 
   if (finished) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-gray-950 gap-4">
-        <p className="text-4xl">🎨</p>
-        <p className="text-white font-bold text-xl">Calcul du score…</p>
-        <p className="text-white/40 text-sm">En attente des autres…</p>
+      <div className="flex flex-col items-center justify-center h-full gap-4"
+        style={{ background: 'linear-gradient(160deg, #0a0818, #18080a, #080a18)' }}>
+        <div className="text-6xl">🎨</div>
+        <p className="text-white font-black text-2xl">Calcul du score…</p>
+        <div className="w-8 h-8 rounded-full animate-spin border-2 border-white/20 border-t-white/80 mt-2" />
+        <p className="text-white/30 text-xs mt-2">En attente des autres…</p>
       </div>
     )
   }
@@ -278,13 +296,35 @@ export default function PeintureBattle({ players, myPlayerId, duration, onComple
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="absolute inset-0" />
+      {/* Timer bar */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 pointer-events-none">
+        <div className="h-full transition-all duration-100"
+          style={{
+            width: `${timerPct * 100}%`,
+            background: timerPct > 0.5 ? '#4ade80' : timerPct > 0.25 ? '#facc15' : '#f87171',
+          }} />
+      </div>
       {/* HUD */}
-      <div className="absolute top-3 right-3 bg-black/60 rounded-xl px-3 py-1 pointer-events-none">
-        <span className="text-yellow-400 font-bold">{(timeLeft / 1000).toFixed(0)}s</span>
+      <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm rounded-2xl px-4 py-2 border border-white/10 pointer-events-none">
+        <span className="font-black tabular-nums"
+          style={{ color: timerPct > 0.5 ? '#4ade80' : timerPct > 0.25 ? '#facc15' : '#f87171' }}>
+          {(timeLeft / 1000).toFixed(0)}s
+        </span>
+      </div>
+      {/* Couleur du joueur */}
+      <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm rounded-2xl px-3 py-2 border border-white/10 pointer-events-none flex items-center gap-2">
+        <div className="w-4 h-4 rounded-full" style={{ background: myColorCSS, boxShadow: `0 0 8px ${myColorCSS}` }} />
+        <span className="text-white/60 text-xs">Toi</span>
       </div>
       {/* Joystick */}
       <div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-white/10 border-2 border-white/20 select-none touch-none"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 w-36 h-36 rounded-full select-none touch-none"
+        style={{
+          background: 'rgba(0,0,0,0.5)',
+          border: `2px solid ${myColorCSS}55`,
+          backdropFilter: 'blur(8px)',
+          boxShadow: `0 0 20px ${myColorCSS}33`,
+        }}
         onTouchStart={handleJoystickStart as unknown as React.TouchEventHandler}
         onTouchMove={handleJoystickMove as unknown as React.TouchEventHandler}
         onTouchEnd={handleJoystickEnd}
@@ -293,7 +333,8 @@ export default function PeintureBattle({ players, myPlayerId, duration, onComple
         onMouseUp={handleJoystickEnd}
       >
         <div className="flex items-center justify-center h-full">
-          <div className="w-10 h-10 rounded-full bg-white/30" />
+          <div className="w-12 h-12 rounded-full"
+            style={{ background: myColorCSS, boxShadow: `0 0 15px ${myColorCSS}88`, opacity: 0.8 }} />
         </div>
       </div>
     </div>
@@ -303,7 +344,7 @@ export default function PeintureBattle({ players, myPlayerId, duration, onComple
 function finishGame(
   app: PIXI.Application,
   myPlayerId: string,
-  myIndex: number,
+  _myIndex: number,
   mapSize: number,
   playerStates: Map<string, PlayerState>,
   players: MinigameComponentProps['players'],

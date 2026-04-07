@@ -4,18 +4,25 @@ import type { IMinigameResult } from '../types/minigame.types'
 
 type Phase = 'waiting' | 'ready' | 'flash' | 'done'
 
-const FLASH_COLORS = ['#FF4444', '#4488FF', '#44FF88', '#FFD700', '#FF44FF']
+const FLASH_CONFIGS = [
+  { color: '#FF2244', label: 'ROUGE', bg: 'from-red-600 to-rose-900' },
+  { color: '#2266FF', label: 'BLEU',  bg: 'from-blue-600 to-indigo-900' },
+  { color: '#22FF88', label: 'VERT',  bg: 'from-emerald-500 to-teal-900' },
+  { color: '#FFD700', label: 'OR',    bg: 'from-yellow-400 to-orange-900' },
+  { color: '#CC44FF', label: 'VIOLET',bg: 'from-purple-500 to-violet-900' },
+]
 
 export default function ReactionPure({ players, myPlayerId, duration, onComplete }: MinigameComponentProps) {
   const [phase, setPhase] = useState<Phase>('waiting')
-  const [flashColor, setFlashColor] = useState('#FF4444')
+  const [flashConfig, setFlashConfig] = useState(FLASH_CONFIGS[0])
   const [myTime, setMyTime] = useState<number | null>(null)
+  const [tooEarly, setTooEarly] = useState(false)
+  const [countKey, setCountKey] = useState(0)
   const flashTimeRef = useRef<number>(0)
   const doneRef = useRef(false)
   const [countdown, setCountdown] = useState(3)
 
   useEffect(() => {
-    // Compte à rebours 3s
     const interval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -23,6 +30,7 @@ export default function ReactionPure({ players, myPlayerId, duration, onComplete
           startGame()
           return 0
         }
+        setCountKey(k => k + 1)
         return prev - 1
       })
     }, 1000)
@@ -32,13 +40,11 @@ export default function ReactionPure({ players, myPlayerId, duration, onComplete
   function startGame() {
     setPhase('ready')
     const delay = 1000 + Math.random() * 3000
-    const color = FLASH_COLORS[Math.floor(Math.random() * FLASH_COLORS.length)]
+    const config = FLASH_CONFIGS[Math.floor(Math.random() * FLASH_CONFIGS.length)]
     setTimeout(() => {
-      setFlashColor(color)
+      setFlashConfig(config)
       setPhase('flash')
       flashTimeRef.current = Date.now()
-
-      // Timeout si personne ne tape
       setTimeout(() => {
         if (!doneRef.current) {
           doneRef.current = true
@@ -56,8 +62,6 @@ export default function ReactionPure({ players, myPlayerId, duration, onComplete
       const reactionTime = Date.now() - flashTimeRef.current
       setMyTime(reactionTime)
       setPhase('done')
-
-      // Score inversé : moins = mieux. On envoie 10000 - reactionTime comme score
       const score = Math.max(0, 10000 - reactionTime)
       const results: IMinigameResult[] = players.map(p => ({
         playerId: p.id,
@@ -65,7 +69,7 @@ export default function ReactionPure({ players, myPlayerId, duration, onComplete
       }))
       onComplete(results)
     } else if (phase === 'ready') {
-      // Trop tôt
+      setTooEarly(true)
       setPhase('done')
       doneRef.current = true
       const results: IMinigameResult[] = players.map(p => ({ playerId: p.id, score: 0 }))
@@ -75,10 +79,15 @@ export default function ReactionPure({ players, myPlayerId, duration, onComplete
 
   if (phase === 'waiting') {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-6 bg-gray-950">
-        <p className="text-white font-bold text-2xl">Réaction Pure ⚡</p>
-        <p className="text-white/60 text-sm text-center px-8">Attends le flash... puis tape !</p>
-        <p className="text-yellow-400 text-5xl font-bold">{countdown}</p>
+      <div className="flex flex-col items-center justify-center h-full gap-6"
+        style={{ background: 'linear-gradient(160deg, #0f0c29, #302b63, #24243e)' }}>
+        <div className="text-6xl mb-2">⚡</div>
+        <p className="text-white font-black text-3xl tracking-wide">RÉACTION PURE</p>
+        <p className="text-white/50 text-sm text-center px-8">Attends le flash… puis tape immédiatement !</p>
+        <div className="mt-4 w-20 h-20 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(255,215,0,0.15)', border: '3px solid rgba(255,215,0,0.5)' }}>
+          <span key={countKey} className="countdown-number text-yellow-400 text-5xl font-black">{countdown}</span>
+        </div>
       </div>
     )
   }
@@ -86,11 +95,18 @@ export default function ReactionPure({ players, myPlayerId, duration, onComplete
   if (phase === 'ready') {
     return (
       <div
-        className="flex flex-col items-center justify-center h-full bg-gray-950 cursor-pointer select-none"
+        className="flex flex-col items-center justify-center h-full cursor-pointer select-none"
+        style={{ background: 'linear-gradient(160deg, #0f0c29, #302b63, #24243e)' }}
         onClick={handleTap}
       >
-        <p className="text-white/40 text-xl">Prêt...</p>
-        <p className="text-white/20 text-sm mt-4">Ne tape pas encore !</p>
+        <div className="ready-pulse w-40 h-40 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(255,255,255,0.2)' }}>
+          <div className="ready-pulse w-24 h-24 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(255,255,255,0.3)', animationDelay: '0.3s' }}>
+            <span className="text-white/30 font-black text-lg">...</span>
+          </div>
+        </div>
+        <p className="text-white/30 text-sm mt-8">Pas encore !</p>
       </div>
     )
   }
@@ -98,28 +114,52 @@ export default function ReactionPure({ players, myPlayerId, duration, onComplete
   if (phase === 'flash') {
     return (
       <div
-        className="flex flex-col items-center justify-center h-full cursor-pointer select-none"
-        style={{ backgroundColor: flashColor }}
+        className={`flex flex-col items-center justify-center h-full cursor-pointer select-none bg-gradient-to-b ${flashConfig.bg} flash-in`}
         onClick={handleTap}
       >
-        <p className="text-white font-black text-4xl drop-shadow-lg">TAP !</p>
+        <div className="w-48 h-48 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(255,255,255,0.25)', boxShadow: `0 0 60px ${flashConfig.color}` }}>
+          <p className="text-white font-black text-5xl drop-shadow-lg">TAP !</p>
+        </div>
+        <p className="text-white/70 font-bold text-lg mt-6 tracking-widest">{flashConfig.label} !</p>
       </div>
     )
   }
 
-  // Done
+  const fast = myTime !== null && myTime < 300
+  const decent = myTime !== null && myTime < 600
+
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-gray-950 gap-4">
-      <p className="text-4xl">{myTime !== null && myTime < 5000 ? '⚡' : '😴'}</p>
-      {myTime !== null ? (
+    <div className="flex flex-col items-center justify-center h-full gap-6"
+      style={{ background: 'linear-gradient(160deg, #0f0c29, #302b63, #24243e)' }}>
+      {tooEarly ? (
         <>
-          <p className="text-white font-bold text-2xl">{myTime} ms</p>
-          <p className="text-white/60 text-sm">Ton temps de réaction</p>
+          <div className="text-6xl">🚨</div>
+          <p className="text-red-400 font-black text-3xl">TROP TÔT !</p>
+          <p className="text-white/40 text-sm">Score : 0</p>
+        </>
+      ) : myTime !== null ? (
+        <>
+          <div className="text-6xl">{fast ? '⚡' : decent ? '👍' : '🐢'}</div>
+          <div className="text-center">
+            <p className={`font-black text-5xl ${fast ? 'shimmer-text' : 'text-white'}`}>
+              {myTime} ms
+            </p>
+            <p className="text-white/40 text-sm mt-1">temps de réaction</p>
+          </div>
+          <div className="px-6 py-3 rounded-full text-sm font-bold"
+            style={{ background: fast ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.1)',
+                     color: fast ? '#FFD700' : decent ? '#88ff99' : '#ff8888' }}>
+            {fast ? 'Fulgurant !' : decent ? 'Rapide !' : 'Un peu lent…'}
+          </div>
         </>
       ) : (
-        <p className="text-red-400 font-bold text-xl">Trop tôt !</p>
+        <>
+          <div className="text-6xl">😴</div>
+          <p className="text-white/60 font-bold text-xl">Trop lent !</p>
+        </>
       )}
-      <p className="text-white/40 text-sm">En attente des autres…</p>
+      <p className="text-white/30 text-xs mt-4">En attente des autres…</p>
     </div>
   )
 }
